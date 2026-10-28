@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="竹南到銅鑼杭菊 30.6 km 坡度剖面與功率完賽時間預估">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
+<title>竹南銅鑼杭菊線</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: 茶園地形圖的感覺。上方標題與兩張比較卡，左側路線圖、右側控制與剖面，下方爬坡表與景點卡。 */
+:root{
+  --bg:#f2f5f1; --surface:#ffffff; --ink:#1c2822; --muted:#5a6a61; --line:#d6ded7;
+  --tea:#2e6a4e; --gold:#9a6a00; --gold-soft:#f3e3b5;
+  --g-down:#6f9fc9; --g0:#8db4a0; --g1:#e1bd45; --g2:#e0872c; --g3:#c8402d;
+  --z1:#9aa79f; --z2:#4f9a73; --z3:#d4ad35; --z4:#e0862d; --z5:#c8472f; --z6:#87408c;
+  --f-display:"LXGW WenKai TC","Noto Serif TC",serif;
+  --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#111814; --surface:#19221d; --ink:#e4ebe6; --muted:#9aa9a1; --line:#2b3831;
+  --tea:#79c49b; --gold:#e7b84a; --gold-soft:#3a3120; --g0:#6e9784; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111814; --surface:#19221d; --ink:#e4ebe6; --muted:#9aa9a1; --line:#2b3831;
+  --tea:#79c49b; --gold:#e7b84a; --gold-soft:#3a3120; --g0:#6e9784; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1,h2{font-family:var(--f-display);font-weight:700;text-wrap:balance;margin:0;line-height:1.25}
+h1{font-size:clamp(30px,5vw,44px)}
+h2{font-size:22px}
+.eyebrow{font-size:12px;letter-spacing:.12em;color:var(--tea);font-weight:700}
+.muted{color:var(--muted)}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+header{display:flex;flex-direction:column;gap:8px}
+.facts{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:14px;color:var(--muted)}
+.facts b{color:var(--ink);font-family:var(--f-mono);font-weight:500}
+
+/* compare */
+.compare{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.mode{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;gap:6px;cursor:pointer;text-align:left;font:inherit;color:inherit}
+.mode[aria-pressed="true"]{border-color:var(--tea);box-shadow:inset 0 0 0 1px var(--tea)}
+.mode:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.mode .lbl{font-size:13px;color:var(--muted);display:flex;justify-content:space-between}
+.mode .big{font-family:var(--f-mono);font-size:34px;font-weight:500;line-height:1.1}
+.mode .sub{font-size:13px;color:var(--muted)}
+.tag{font-size:11px;padding:1px 8px;border-radius:99px;background:var(--gold-soft);color:var(--gold);font-weight:700}
+
+/* main grid */
+.main{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:820px){.main{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.mapbox svg{width:100%;height:auto;max-height:640px;display:block}
+@media (max-width:820px){.mapbox svg{max-height:440px}}
+.right{display:flex;flex-direction:column;gap:16px;min-width:0}
+
+.ctrl{display:flex;flex-direction:column;gap:12px}
+.ctrl-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.ctrl label{font-weight:700}
+.wval{font-family:var(--f-mono);font-size:26px}
+.wval small{font-size:14px;color:var(--muted)}
+input[type=range]{width:100%;accent-color:var(--tea)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;font-size:13px;padding:4px 10px;border-radius:99px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.chip:hover{border-color:var(--tea)}
+.chip[aria-pressed="true"]{background:var(--tea);color:var(--surface);border-color:var(--tea)}
+.chip:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.zonebadge{font-size:12px;font-weight:700;padding:1px 8px;border-radius:4px;color:#fff}
+details summary{cursor:pointer;color:var(--muted);font-size:13px}
+.adv{display:flex;flex-direction:column;gap:8px;padding-top:8px}
+
+.profile{position:relative;touch-action:pan-y}
+.profile svg{width:100%;display:block;overflow:visible}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:8px 14px;font-size:13px;margin-top:10px}
+.readout div{display:flex;flex-direction:column}
+.readout span:first-child{color:var(--muted);font-size:12px}
+.readout span:last-child{font-family:var(--f-mono);font-size:16px}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:12px;height:8px;border-radius:2px;margin-right:4px;vertical-align:middle}
+.play{font:inherit;font-size:13px;padding:6px 14px;border-radius:6px;border:1px solid var(--tea);background:transparent;color:var(--tea);cursor:pointer;font-weight:700}
+.play:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+.zbar{display:flex;height:16px;border-radius:4px;overflow:hidden;background:var(--line)}
+.zbar span{height:100%}
+.zlist{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:6px 14px;font-size:13px;margin-top:10px}
+.zlist div{display:flex;justify-content:space-between;gap:8px}
+
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:860px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.04em}
+th:nth-child(-n+2),td:nth-child(-n+2){text-align:left}
+td.num{font-family:var(--f-mono)}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--bg)}
+
+.pois{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+@media (max-width:520px){.pois{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.poi .body{padding:10px}}
+.poi{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+.ph{aspect-ratio:16/10;max-width:100%;background:repeating-linear-gradient(135deg,var(--bg) 0 10px,var(--line) 10px 11px);display:grid;place-items:center;color:var(--muted);font-size:12px}
+.poi .body{padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+.poi .meta{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted)}
+.poi .type{font-weight:700;color:var(--tea)}
+.poi a,.poi .nolink{font-size:13px;margin-top:4px}
+.poi a{color:var(--tea)}
+.poi .nolink{color:var(--muted)}
+.notes{font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+.notes ul{margin:4px 0 0;padding-left:20px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="eyebrow">苗栗騎乘攻略・個人預估版</div>
+  <h1>竹南 → 銅鑼杭菊</h1>
+  <div class="facts">
+    <span>距離 <b id="fDist"></b></span>
+    <span>爬升 <b id="fGain"></b></span>
+    <span>主要爬坡 <b>C3 台13 南苗 → 大坪頂</b></span>
+    <span>花期 <b>11 月，約 3 週</b></span>
+  </div>
+</header>
+
+<section class="compare" aria-label="情境比較">
+  <button class="mode" id="mSolo" aria-pressed="false">
+    <span class="lbl">獨推<span class="tag" id="tagSolo"></span></span>
+    <span class="big" id="tSolo">–</span>
+    <span class="sub" id="sSolo"></span>
+  </button>
+  <button class="mode" id="mGroup" aria-pressed="true">
+    <span class="lbl">有人領騎<span class="tag" id="tagGroup"></span></span>
+    <span class="big" id="tGroup">–</span>
+    <span class="sub" id="sGroup"></span>
+  </button>
+</section>
+
+<section class="main">
+  <div class="panel mapbox">
+    <div class="ctrl-row"><h2>路線圖</h2><button class="play" id="play">▶ 播放</button></div>
+    <svg id="map" role="img" aria-label="竹南到銅鑼杭菊路線，依坡度上色"></svg>
+    <div class="legend">
+      <span><i style="background:var(--g-down)"></i>下坡</span>
+      <span><i style="background:var(--g0)"></i>&lt;2%</span>
+      <span><i style="background:var(--g1)"></i>2–4%</span>
+      <span><i style="background:var(--g2)"></i>4–6%</span>
+      <span><i style="background:var(--g3)"></i>≥6%</span>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="panel ctrl" id="ctrlSolo" hidden>
+      <div class="ctrl-row"><label for="wSolo">我的 W（獨推）</label><span class="wval"><span id="vSolo"></span> <small>W</small> <span class="zonebadge" id="zSolo"></span></span></div>
+      <input type="range" id="wSolo" min="80" max="200" step="1" value="120">
+      <div class="chips" id="chipsSolo"></div>
+    </div>
+    <div class="panel ctrl" id="ctrlGroup">
+      <div class="ctrl-row"><label for="wLead">領騎 W</label><span class="wval"><span id="vLead"></span> <small>W</small> <span class="zonebadge" id="zLead"></span></span></div>
+      <input type="range" id="wLead" min="120" max="300" step="1" value="190">
+      <div class="chips" id="chipsLead"></div>
+      <details>
+        <summary>我能撐住的上限 W：<span class="num" id="vCapS"></span> W・跟車風阻 <span class="num" id="vDraftS"></span>%</summary>
+        <div class="adv">
+          <label for="wCap">我的上限 W（超過就會被拉開，改用這個 W 自己騎）</label>
+          <input type="range" id="wCap" min="110" max="200" step="1" value="160">
+          <label for="draft">跟車時的風阻比例（100% = 沒跟到）</label>
+          <input type="range" id="draft" min="55" max="100" step="5" value="70">
+        </div>
+      </details>
+    </div>
+
+    <div class="panel">
+      <div class="ctrl-row"><h2>坡度剖面</h2><span class="muted" style="font-size:13px">拖動查看每一點</span></div>
+      <div class="profile" id="profile"><svg id="prof" viewBox="0 0 1000 300" preserveAspectRatio="none" aria-label="海拔剖面與預估"></svg></div>
+      <div class="readout">
+        <div><span>位置</span><span id="rKm">–</span></div>
+        <div><span>海拔</span><span id="rAlt">–</span></div>
+        <div><span>坡度</span><span id="rGr">–</span></div>
+        <div><span>預估時速</span><span id="rV">–</span></div>
+        <div><span>我的 W</span><span id="rW">–</span></div>
+        <div><span>累積時間</span><span id="rT">–</span></div>
+      </div>
+    </div>
+
+    <div class="panel" id="zonePanel">
+      <div class="ctrl-row"><h2>我的區間分佈</h2><span class="muted" style="font-size:13px" id="zoneNote"></span></div>
+      <div class="zbar" id="zbar" style="margin-top:10px"></div>
+      <div class="zlist" id="zlist"></div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" style="display:flex;flex-direction:column;gap:10px">
+  <h2>重點爬坡</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>編號</th><th>名稱</th><th>起點 km</th><th>距離 km</th><th>爬升 m</th><th>Avg 坡度</th><th>Max 坡度</th><th>獨推時間</th><th>跟車時間</th><th>我的 W（跟車）</th><th>我的區間</th><th>坡頂等待</th></tr></thead>
+    <tbody id="climbs"></tbody>
+  </table></div>
+  <p class="muted" style="margin:0;font-size:13px">點選列可在剖面圖和路線圖上定位。Max 坡度以約 90 m 平滑後計算，實際短陡段會更陡。</p>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:12px">
+  <h2>沿途景點</h2>
+  <div class="pois" id="pois"></div>
+</section>
+
+<section class="notes">
+  <b style="color:var(--ink)">計算假設</b>
+  <ul>
+    <li>我：體重 61.5 kg、車重 9 kg、FTP 170 W</li>
+    <li>領騎：體重 75 kg、車重 8 kg、FTP 280 W</li>
+    <li>CdA 0.35、Crr 0.005、空氣密度 1.2、傳動效率 97%、下坡速度上限 50 km/h</li>
+    <li>跟車：我的風阻乘上跟車比例；需要的 W 超過上限就被拉開，改用上限 W 自己騎，回到跟得上的路段時領騎等我會合</li>
+    <li>不含紅綠燈、停車、逆風與路況，實際時間通常會更長</li>
+    <li>路線資料：Strava 2025.11.30「竹南-銅鑼杭菊-勝興車站-龍騰斷橋」前 30.6 km</li>
+  </ul>
+</section>
+</div>
+
+<script>
+const R = {"pts":[[24.684736,120.868927,0.0,7.2],[24.683929,120.868958,0.0923,7.4],[24.683101,120.869019,0.1877,7.5],[24.682367,120.869081,0.273,8.0],[24.681419,120.869163,0.3639,8.0],[24.680636,120.869224,0.4546,8.0],[24.679762,120.869278,0.5523,8.0],[24.679118,120.86955,0.6443,8.0],[24.678447,120.869375,0.7374,8.1],[24.677853,120.868788,0.8293,8.0],[24.677268,120.868223,0.9176,7.9],[24.676652,120.867623,1.0121,8.0],[24.676097,120.867066,1.0972,8.0],[24.675404,120.866509,1.1954,7.9],[24.67468,120.866236,1.2857,7.8],[24.673837,120.866254,1.3811,7.8],[24.673075,120.866427,1.4699,7.6],[24.672324,120.866613,1.5571,7.5],[24.671499,120.866827,1.6527,7.4],[24.670613,120.867029,1.7467,7.5],[24.669884,120.867188,1.8335,8.2],[24.669058,120.867261,1.9269,9.6],[24.668222,120.867221,2.0211,11.2],[24.667435,120.867164,2.1105,12.9],[24.66661,120.8671,2.2057,14.6],[24.665814,120.86704,2.2959,16.1],[24.664986,120.866979,2.3878,17.0],[24.664174,120.866919,2.4782,17.9],[24.66337,120.866856,2.5687,18.8],[24.662562,120.866795,2.6591,19.6],[24.661697,120.866728,2.7566,20.2],[24.660859,120.866683,2.8483,20.8],[24.660064,120.866682,2.937,21.4],[24.659249,120.866717,3.0281,21.6],[24.658393,120.866786,3.1237,21.0],[24.657545,120.866852,3.2107,19.4],[24.656682,120.866925,3.3064,17.6],[24.655887,120.866903,3.399,17.0],[24.65521,120.866378,3.4901,17.3],[24.65458,120.865837,3.5805,18.1],[24.653946,120.865294,3.6724,19.2],[24.653324,120.864776,3.7611,19.8],[24.652523,120.864359,3.8602,18.9],[24.651826,120.864027,3.9444,17.4],[24.65106,120.863634,4.0377,16.0],[24.650368,120.863175,4.1277,16.9],[24.649654,120.862621,4.2247,19.4],[24.64892,120.86214,4.3173,22.5],[24.648201,120.861803,4.4073,25.4],[24.647439,120.861481,4.5003,28.1],[24.64664,120.861224,4.5938,29.4],[24.645841,120.860977,4.6851,29.9],[24.645101,120.860678,4.772,30.2],[24.644333,120.860251,4.8674,31.1],[24.643608,120.859838,4.9581,32.3],[24.642847,120.859633,5.0466,33.0],[24.6421,120.859511,5.1409,33.2],[24.6421,120.859511,5.2376,33.1],[24.6421,120.859511,5.3224,32.5],[24.6421,120.859511,5.4202,32.1],[24.638822,120.859248,5.5067,32.1],[24.637957,120.859045,5.6006,32.2],[24.637148,120.858696,5.6977,32.1],[24.637007,120.858633,5.7884,31.5],[24.637007,120.858633,5.8762,30.4],[24.634648,120.857803,5.9738,29.0],[24.633822,120.857898,6.061,27.6],[24.63314,120.857556,6.1472,27.0],[24.632634,120.856764,6.2436,27.4],[24.632116,120.856018,6.3384,28.3],[24.631475,120.855496,6.4292,29.6],[24.630819,120.854942,6.5212,31.7],[24.630199,120.854327,6.6127,34.5],[24.629617,120.853698,6.7038,37.7],[24.629009,120.853087,6.7956,42.2],[24.628256,120.852809,6.8848,47.3],[24.627421,120.852753,6.9791,52.6],[24.626649,120.852484,7.0703,56.5],[24.626119,120.851823,7.1623,59.1],[24.625682,120.851089,7.2555,59.6],[24.625055,120.850067,7.3487,58.7],[24.624655,120.849261,7.4399,57.3],[24.6242,120.848434,7.5289,56.0],[24.623795,120.847668,7.6204,54.9],[24.623278,120.84697,7.7138,54.2],[24.622656,120.846365,7.8045,53.6],[24.622047,120.845809,7.8951,52.5],[24.621407,120.845238,7.9869,51.2],[24.620746,120.844664,8.0778,50.2],[24.620071,120.84408,8.1718,49.7],[24.619434,120.843524,8.263,49.3],[24.618765,120.842962,8.3563,49.1],[24.618138,120.842312,8.4528,48.3],[24.617693,120.841646,8.5356,47.2],[24.617265,120.840819,8.6302,45.8],[24.616869,120.840035,8.7213,43.8],[24.616279,120.838899,8.8194,41.6],[24.615733,120.838132,8.9117,40.0],[24.615196,120.837546,8.9955,38.4],[24.614517,120.837006,9.0882,37.9],[24.613698,120.83673,9.1812,39.0],[24.61286,120.836456,9.2769,41.0],[24.612189,120.835951,9.3679,43.4],[24.61161,120.835373,9.4558,45.6],[24.61098,120.834757,9.5531,47.0],[24.610372,120.834158,9.6366,46.8],[24.609737,120.833542,9.7314,45.0],[24.609032,120.833021,9.8252,42.2],[24.608258,120.832563,9.9204,38.6],[24.607363,120.832081,10.0118,34.7],[24.606636,120.831743,10.0961,31.2],[24.605876,120.831403,10.1934,28.7],[24.605161,120.83105,10.2823,27.0],[24.604387,120.83064,10.3801,26.4],[24.603662,120.830304,10.4714,26.2],[24.602921,120.830059,10.5599,26.1],[24.602107,120.829877,10.6548,26.1],[24.601333,120.829613,10.7421,26.0],[24.600688,120.829006,10.8348,25.9],[24.599901,120.828531,10.9259,26.0],[24.599074,120.828289,11.0217,27.2],[24.598373,120.827952,11.1077,28.5],[24.597668,120.827435,11.2036,30.0],[24.597046,120.8269,11.2918,31.6],[24.596395,120.826395,11.3834,33.1],[24.595727,120.825869,11.4766,33.8],[24.595061,120.825343,11.571,34.4],[24.594233,120.824689,11.6625,34.8],[24.593591,120.824405,11.7534,35.0],[24.593186,120.825128,11.8448,34.8],[24.592716,120.825906,11.9419,34.1],[24.592273,120.826642,12.0341,33.2],[24.591844,120.827385,12.1239,32.4],[24.591454,120.828092,12.2088,31.8],[24.590998,120.828947,12.3075,31.7],[24.590617,120.829697,12.3948,31.9],[24.590218,120.830525,12.4905,32.2],[24.589877,120.831271,12.5757,32.8],[24.589472,120.832233,12.6698,33.4],[24.589145,120.833048,12.7614,33.6],[24.588814,120.833925,12.8584,34.2],[24.588504,120.834755,12.9492,34.5],[24.588211,120.835596,13.042,34.8],[24.587963,120.836388,13.127,35.0],[24.587696,120.837256,13.221,35.3],[24.58743,120.838115,13.3142,35.6],[24.587091,120.838944,13.4074,35.9],[24.586654,120.839694,13.4986,36.4],[24.586155,120.840377,13.5877,36.8],[24.585585,120.841099,13.6857,37.4],[24.584965,120.841702,13.778,38.0],[24.584242,120.842128,13.869,38.5],[24.583492,120.842431,13.9578,38.9],[24.58274,120.842719,14.0475,39.2],[24.581938,120.842966,14.1411,39.6],[24.581086,120.843077,14.2369,39.9],[24.580333,120.843023,14.3205,40.2],[24.579502,120.842927,14.4144,40.7],[24.578647,120.842839,14.5098,41.2],[24.577808,120.842743,14.6032,41.5],[24.577051,120.842656,14.6875,42.1],[24.576208,120.84255,14.7809,43.0],[24.575389,120.842261,14.8751,43.7],[24.574567,120.842032,14.9707,44.2],[24.57382,120.842046,15.0549,44.7],[24.572942,120.841924,15.1549,44.9],[24.572186,120.84175,15.2416,44.8],[24.571349,120.841517,15.3337,45.0],[24.570574,120.841279,15.4235,45.4],[24.569733,120.841022,15.5204,46.0],[24.568989,120.840764,15.6067,46.6],[24.56798,120.840363,15.7023,47.4],[24.567213,120.84002,15.7938,48.1],[24.566493,120.839694,15.8819,48.8],[24.565687,120.839349,15.9793,49.5],[24.564949,120.839028,16.0668,50.2],[24.564139,120.838678,16.163,51.2],[24.563378,120.838344,16.2536,52.1],[24.562627,120.837992,16.3436,53.1],[24.561648,120.837515,16.4372,53.7],[24.56088,120.837152,16.5327,54.2],[24.560188,120.836803,16.6167,54.4],[24.559445,120.836433,16.7082,54.7],[24.558634,120.83604,16.8072,54.9],[24.557906,120.835657,16.8964,55.3],[24.557142,120.835194,16.9892,55.5],[24.556407,120.834699,17.0778,55.4],[24.555731,120.83427,17.1674,55.3],[24.555041,120.833818,17.2586,55.2],[24.554254,120.83336,17.3583,55.3],[24.55355,120.832919,17.45,55.8],[24.552889,120.832457,17.5377,56.4],[24.552179,120.831937,17.6336,57.0],[24.551528,120.831462,17.7226,57.5],[24.550851,120.830967,17.813,58.1],[24.550206,120.830462,17.9028,58.4],[24.549511,120.829894,17.9991,58.8],[24.548876,120.829392,18.0873,59.3],[24.548173,120.828822,18.1843,60.2],[24.547488,120.82827,18.2761,60.9],[24.546771,120.827698,18.367,61.8],[24.546178,120.827221,18.4537,62.5],[24.545534,120.82669,18.5448,63.2],[24.544863,120.826117,18.6395,63.8],[24.544239,120.825598,18.7286,64.6],[24.543558,120.824928,18.8252,65.6],[24.542977,120.82428,18.917,66.7],[24.542418,120.823613,19.0088,67.9],[24.541911,120.822919,19.1021,68.8],[24.541438,120.822224,19.1916,69.7],[24.54097,120.821524,19.2791,70.4],[24.540482,120.820792,19.3704,71.1],[24.539989,120.820052,19.4638,71.7],[24.539512,120.819283,19.5588,72.3],[24.539084,120.818495,19.6537,73.1],[24.538668,120.817719,19.7459,73.8],[24.538261,120.81694,19.8365,74.8],[24.537881,120.816131,19.9246,76.7],[24.537963,120.815435,20.017,79.6],[24.538715,120.815162,20.1088,83.1],[24.53937,120.81462,20.2007,87.4],[24.539581,120.813774,20.2918,92.1],[24.539118,120.813073,20.3834,97.0],[24.538402,120.812553,20.4768,101.6],[24.538298,120.811712,20.569,105.7],[24.538624,120.810938,20.6588,109.0],[24.539309,120.81066,20.753,111.6],[24.540093,120.810863,20.8444,113.1],[24.540927,120.811099,20.936,114.4],[24.541762,120.811343,21.0299,116.1],[24.542564,120.811264,21.1184,118.3],[24.543218,120.810681,21.2123,121.5],[24.543546,120.809942,21.3034,125.6],[24.542958,120.809327,21.3956,130.2],[24.542191,120.808984,21.4881,135.2],[24.54141,120.808956,21.5788,140.6],[24.540601,120.80915,21.6718,146.2],[24.53981,120.809102,21.7612,151.7],[24.538999,120.808948,21.8537,157.0],[24.53818,120.809036,21.9467,162.5],[24.537381,120.809095,22.0364,167.8],[24.536612,120.80876,22.1304,172.4],[24.536056,120.808129,22.2207,176.4],[24.535623,120.807365,22.3129,179.7],[24.535159,120.806608,22.4067,181.7],[24.534717,120.805922,22.4935,182.7],[24.534251,120.805187,22.5861,183.0],[24.533679,120.804406,22.6766,183.0],[24.533044,120.803781,22.7708,182.6],[24.53243,120.803181,22.8626,181.8],[24.531785,120.802566,22.9587,181.0],[24.531152,120.80193,23.0469,180.2],[24.530564,120.801364,23.139,178.9],[24.529956,120.800752,23.2327,177.1],[24.529424,120.80009,23.3292,174.1],[24.528941,120.799486,23.411,171.0],[24.528239,120.798729,23.5098,168.1],[24.527536,120.798009,23.5969,165.9],[24.526908,120.797384,23.6911,164.7],[24.526282,120.796759,23.7826,165.2],[24.525656,120.796151,23.8764,165.8],[24.525012,120.795642,23.9663,166.3],[24.524339,120.795149,24.0559,166.6],[24.523706,120.794586,24.1472,166.8],[24.523155,120.79388,24.2394,167.8],[24.522631,120.79312,24.3351,169.8],[24.522245,120.792351,24.423,172.4],[24.521832,120.791573,24.5164,175.4],[24.521286,120.790946,24.6056,178.6],[24.520663,120.790311,24.7008,181.6],[24.520067,120.789709,24.7924,184.2],[24.519447,120.789099,24.8849,186.0],[24.518833,120.788546,24.9751,186.5],[24.518147,120.788063,25.0625,185.2],[24.517264,120.787726,25.1591,182.2],[24.516511,120.787551,25.2464,178.0],[24.515594,120.787358,25.3493,173.7],[24.514832,120.787249,25.4335,170.2],[24.51399,120.787163,25.5285,167.2],[24.51343,120.787081,25.611,164.6],[24.512621,120.786928,25.7158,161.3],[24.511812,120.786769,25.8066,157.4],[24.510987,120.786526,25.9011,152.7],[24.510336,120.785964,25.988,148.6],[24.509682,120.785269,26.0745,145.2],[24.508878,120.784799,26.1722,142.9],[24.508092,120.784603,26.2583,141.6],[24.507105,120.784363,26.3536,141.4],[24.506354,120.784161,26.444,141.3],[24.505555,120.783968,26.5336,141.3],[24.504715,120.783778,26.6304,141.5],[24.503948,120.783593,26.7185,141.5],[24.503108,120.783392,26.8129,141.0],[24.502304,120.783202,26.9045,140.4],[24.501475,120.783018,26.9972,139.7],[24.500648,120.782832,27.0899,139.1],[24.499807,120.782641,27.1841,138.6],[24.498982,120.782446,27.2683,138.0],[24.498179,120.782257,27.3618,137.4],[24.497363,120.78207,27.4544,137.0],[24.496555,120.781882,27.5476,136.9],[24.495761,120.781701,27.6373,137.0],[24.494949,120.781514,27.7288,137.3],[24.494116,120.781344,27.8251,137.7],[24.493337,120.781128,27.9156,138.0],[24.492579,120.780959,28.0039,138.1],[24.491783,120.780802,28.0945,138.5],[24.490893,120.780679,28.1926,139.4],[24.490102,120.780601,28.28,140.6],[24.489238,120.780567,28.3766,142.2],[24.488454,120.78058,28.464,144.0],[24.487622,120.780621,28.5572,145.6],[24.486804,120.780679,28.6488,147.4],[24.48596,120.780732,28.7439,149.2],[24.485184,120.780774,28.8298,151.2],[24.484316,120.780842,28.9246,153.1],[24.483508,120.780907,29.0144,154.8],[24.48268,120.780967,29.1106,156.2],[24.481906,120.781016,29.1973,157.4],[24.481074,120.781071,29.2897,158.7],[24.480208,120.781128,29.3836,160.2],[24.479356,120.781181,29.4759,161.9],[24.478558,120.781176,29.5674,163.8],[24.478295,120.780355,29.6582,165.4],[24.478041,120.779486,29.7505,166.4],[24.477384,120.778719,29.8451,167.2],[24.476615,120.778744,29.9314,168.0],[24.475775,120.778778,30.0234,168.6],[24.474964,120.778795,30.1151,169.8],[24.474126,120.778817,30.208,171.2],[24.473293,120.778869,30.3013,172.4],[24.472508,120.77882,30.3926,174.0],[24.471685,120.778845,30.4822,174.9],[24.470828,120.778862,30.5765,175.5]],"climbs":[{"id":"C1","name":"頭份小坡","i0":46,"i1":49,"startKm":4.22,"distKm":0.28,"gain":9,"avg":3.2,"max":3.4},{"id":"C2","name":"頭份往造橋坡","i0":69,"i1":78,"startKm":6.34,"distKm":0.82,"gain":31,"avg":3.7,"max":5.8},{"id":"C3","name":"台13 南苗 → 大坪頂","i0":217,"i1":245,"startKm":19.92,"distKm":2.57,"gain":106,"avg":4.1,"max":6.2},{"id":"C4","name":"大坪頂後起伏","i0":263,"i1":272,"startKm":24.15,"distKm":0.83,"gain":20,"avg":2.4,"max":3.7},{"id":"C5","name":"往銅鑼緩上","i0":306,"i1":333,"startKm":28.09,"distKm":2.48,"gain":37,"avg":1.5,"max":2.3}]};
+const G=9.81,RHO=1.2,ETA=0.97,CRR=0.005,CDA=0.35,VMAX=50/3.6;
+const ME={m:70.5,ftp:170}, LEAD={m:83,ftp:280};
+const ZONES=[["Z1",0,.56,"--z1"],["Z2",.56,.76,"--z2"],["Tempo",.76,.88,"--z3"],["SST",.88,.95,"--z4"],["Threshold",.95,1.06,"--z5"],["VO2",1.06,9,"--z6"]];
+const P=R.pts, N=P.length;
+const km=P.map(p=>p[2]), alt=P.map(p=>p[3]);
+const seg=[]; for(let i=0;i<N-1;i++){const d=(km[i+1]-km[i])*1000;let g=(alt[i+1]-alt[i])/d;g=Math.max(-.15,Math.min(.15,g));seg.push({d,g});}
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const zoneOf=(w,ftp)=>{const r=w/ftp;return ZONES.find(z=>r>=z[1]&&r<z[2])||ZONES[0]};
+const gradeVar=g=>g<-.01?"--g-down":g<.02?"--g0":g<.04?"--g1":g<.06?"--g2":"--g3";
+function solveV(Pw,m,g,cda){const th=Math.atan(g),a=m*G*(Math.sin(th)+CRR*Math.cos(th)),b=.5*RHO*cda,c=Math.max(Pw,0)*ETA;
+  let lo=0,hi=40;for(let k=0;k<60;k++){const v=(lo+hi)/2;(a*v+b*v*v*v-c>0)?hi=v:lo=v}return Math.max(.8,Math.min(hi,VMAX))}
+function needW(v,m,g,cda){const th=Math.atan(g),a=m*G*(Math.sin(th)+CRR*Math.cos(th));return Math.max(0,(a*v+.5*RHO*cda*v**3)/ETA)}
+const fmt=s=>{s=Math.round(s);const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return h?`${h}:${String(m).padStart(2,"0")}:${String(x).padStart(2,"0")}`:`${m}:${String(x).padStart(2,"0")}`};
+
+const st={mode:"group",wSolo:120,wLead:190,wCap:160,draft:.70,idx:0};
+let res;
+function compute(){
+  const solo=seg.map(s=>{const v=solveV(st.wSolo,ME.m,s.g,CDA);return {v,t:s.d/v,w:st.wSolo}});
+  const grp=[];let gap=0;const waits=new Array(seg.length).fill(0);
+  seg.forEach((s,i)=>{const vL=solveV(st.wLead,LEAD.m,s.g,CDA);const tL=s.d/vL;const req=needW(vL,ME.m,s.g,CDA*st.draft);
+    if(req<=st.wCap){if(gap>0){waits[i]=gap;gap=0}grp.push({v:vL,t:tL,w:req,tL,drop:false})}
+    else{const v=solveV(st.wCap,ME.m,s.g,CDA);const t=s.d/v;gap+=t-tL;grp.push({v,t,w:st.wCap,tL,drop:true})}});
+  if(gap>0)waits[seg.length-1]+=gap;
+  const cum=a=>{let c=0;return [0,...a.map(x=>c+=x.t)]};
+  res={solo,grp,waits,cumSolo:cum(solo),cumGrp:cum(grp)};
+}
+const sum=(a,f,i0=0,i1=a.length)=>{let s=0;for(let i=i0;i<i1;i++)s+=f(a[i],i);return s};
+const avgW=(arr,i0,i1)=>sum(arr,x=>x.w*x.t,i0,i1)/sum(arr,x=>x.t,i0,i1);
+
+function fixVars(root){root.querySelectorAll("*").forEach(el=>{for(const a of ["fill","stroke","font-family"]){const v=el.getAttribute(a);if(v&&v.includes("var(")){el.style.setProperty(a,v);el.removeAttribute(a)}}})}
+/* ---------- map ---------- */
+const mapSvg=document.getElementById("map");
+const lat0=(Math.min(...P.map(p=>p[0]))+Math.max(...P.map(p=>p[0])))/2,kx=Math.cos(lat0*Math.PI/180);
+const xs=P.map(p=>p[1]*kx),ys=P.map(p=>-p[0]);
+const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+const MW=300,pad=26,sc=(MW-2*pad)/(maxX-minX)*0.62,MH=(maxY-minY)*sc+2*pad;
+const offX=(MW-(maxX-minX)*sc)/2;
+const mx=i=>offX+(xs[i]-minX)*sc,my=i=>pad+(ys[i]-minY)*sc;
+mapSvg.setAttribute("viewBox",`0 0 ${MW} ${MH.toFixed(0)}`);
+const POI=[
+ {id:"P1",type:"起點",name:"竹南",i:0,desc:"出發點，沿途多為平路暖身。"},
+ {id:"P2",type:"補給",name:"苗栗市區（南苗）",i:210,desc:"C3 爬坡前最後方便補給的地方，建議在這裡加水。"},
+ {id:"P3",type:"爬坡頂",name:"大坪頂",i:245,desc:"C3 終點，可以等人會合、稍作休息。"},
+ {id:"P4",type:"美食",name:"錦香餅舖",i:null,desc:"銅鑼火車站對面的老餅舖，招牌肚臍餅，另有杭菊餅。離路線約 0.5 km，位置待確認。"},
+ {id:"P5",type:"終點",name:"銅鑼杭菊田",i:N-1,desc:"九湖村一帶，11 月白菊開滿花田，花期約 3 週。花田每年輪作，位置會變。"},
+ {id:"P6",type:"順遊",name:"九湖休閒農場",i:null,desc:"杭菊節主會場，座標待補。"},
+ {id:"P7",type:"順遊",name:"臺灣客家文化館",i:null,desc:"客委會設在銅鑼的文化館，座標待補。"},
+ {id:"P8",type:"順遊",name:"古意吊橋",i:null,desc:"可遠眺通霄海岸，自行車可通行，座標待補。"}];
+function drawMap(){
+  let h="";
+  for(let i=0;i<N-1;i++)h+=`<line x1="${mx(i).toFixed(1)}" y1="${my(i).toFixed(1)}" x2="${mx(i+1).toFixed(1)}" y2="${my(i+1).toFixed(1)}" stroke="var(${gradeVar(seg[i].g)})" stroke-width="5" stroke-linecap="round"/>`;
+  R.climbs.forEach(c=>{const j=Math.round((c.i0+c.i1)/2);h+=`<text x="${(mx(j)+9).toFixed(1)}" y="${(my(j)+4).toFixed(1)}" font-size="11" font-family="var(--f-mono)" fill="var(--muted)">${c.id}</text>`});
+  POI.filter(p=>p.i!==null).forEach(p=>{const left=p.id==="P2",dy=p.id==="P2"?-6:p.id==="P3"?10:4;h+=`<circle cx="${mx(p.i).toFixed(1)}" cy="${my(p.i).toFixed(1)}" r="6" fill="var(--surface)" stroke="var(--tea)" stroke-width="2.5"/><text x="${(mx(p.i)+(left?-10:10)).toFixed(1)}" y="${(my(p.i)+dy).toFixed(1)}" text-anchor="${left?"end":"start"}" font-size="12" font-weight="700" fill="var(--ink)">${p.name}</text>`});
+  h+=`<circle id="mdot" r="7" fill="var(--gold)" stroke="var(--surface)" stroke-width="2.5"/>`;
+  mapSvg.innerHTML=h;fixVars(mapSvg);
+}
+
+/* ---------- profile ---------- */
+const prof=document.getElementById("prof");
+const PW=1000,EH=180,LT=200,LH=90,MAXKM=km[N-1];
+const aMin=0,aMax=Math.ceil(Math.max(...alt)/50)*50+20;
+const px=k=>k/MAXKM*PW, pyE=a=>EH-(a-aMin)/(aMax-aMin)*(EH-14);
+function drawProfile(){
+  const arr=st.mode==="solo"?res.solo:res.grp;
+  let h="";
+  for(let a=50;a<aMax;a+=50)h+=`<line x1="0" x2="${PW}" y1="${pyE(a)}" y2="${pyE(a)}" stroke="var(--line)" stroke-width="1" vector-effect="non-scaling-stroke"/><text x="4" y="${pyE(a)-3}" font-size="11" fill="var(--muted)" font-family="var(--f-mono)">${a} m</text>`;
+  R.climbs.forEach(c=>{h+=`<rect x="${px(km[c.i0])}" y="0" width="${px(km[c.i1])-px(km[c.i0])}" height="${EH}" fill="var(--gold-soft)" opacity=".7"/><text x="${(px(km[c.i0])+px(km[c.i1]))/2}" y="12" text-anchor="middle" font-size="11" font-weight="700" fill="var(--gold)">${c.id}</text>`});
+  for(let i=0;i<N-1;i++)h+=`<polygon points="${px(km[i])},${EH} ${px(km[i])},${pyE(alt[i])} ${px(km[i+1])},${pyE(alt[i+1])} ${px(km[i+1])},${EH}" fill="var(${gradeVar(seg[i].g)})"/>`;
+  // metric strip: speed (solo) or my W (group)
+  const isG=st.mode!=="solo";
+  const vals=arr.map(x=>isG?x.w:x.v*3.6);
+  const vMax=isG?Math.max(220,...vals):Math.max(50,...vals);
+  const pyL=v=>LT+LH-(Math.min(v,vMax)/vMax)*LH;
+  h+=`<line x1="0" x2="${PW}" y1="${LT+LH}" y2="${LT+LH}" stroke="var(--line)" vector-effect="non-scaling-stroke"/>`;
+  if(isG){[[ME.ftp*.76,"Tempo"],[ME.ftp*.95,"Threshold"]].forEach(([w,l])=>h+=`<line x1="0" x2="${PW}" y1="${pyL(w)}" y2="${pyL(w)}" stroke="var(--line)" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/><text x="${PW-4}" y="${pyL(w)-3}" text-anchor="end" font-size="10" fill="var(--muted)">${l} ${Math.round(w)} W</text>`);
+    for(let i=0;i<N-1;i++){const z=zoneOf(arr[i].w,ME.ftp);h+=`<rect x="${px(km[i])}" y="${pyL(arr[i].w)}" width="${px(km[i+1])-px(km[i])+.4}" height="${LT+LH-pyL(arr[i].w)}" fill="var(${z[3]})" opacity=".85"/>`}}
+  else{let d="";for(let i=0;i<N-1;i++)d+=`${i?"L":"M"}${px(km[i])},${pyL(vals[i])} L${px(km[i+1])},${pyL(vals[i])} `;
+    h+=`<path d="${d}" fill="none" stroke="var(--tea)" stroke-width="2" vector-effect="non-scaling-stroke"/>`;
+    [20,30,40].forEach(v=>h+=`<text x="${PW-4}" y="${pyL(v)-2}" text-anchor="end" font-size="10" fill="var(--muted)">${v} km/h</text>`)}
+  h+=`<text x="4" y="${LT-4}" font-size="11" fill="var(--muted)">${isG?"我的 W（依區間上色）":"預估時速"}</text>`;
+  for(let k=5;k<MAXKM;k+=5)h+=`<text x="${px(k)}" y="${LT+LH+14}" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="var(--f-mono)">${k} km</text>`;
+  h+=`<line id="cur" y1="0" y2="${LT+LH}" stroke="var(--ink)" stroke-width="1.5" vector-effect="non-scaling-stroke"/>`;
+  prof.innerHTML=h;fixVars(prof);
+  prof.setAttribute("viewBox",`0 0 ${PW} ${LT+LH+18}`);
+  prof.style.height="clamp(220px,32vw,320px)";
+}
+
+function setIdx(i){
+  st.idx=Math.max(0,Math.min(N-1,i));
+  const c=document.getElementById("cur");if(c){c.setAttribute("x1",px(km[st.idx]));c.setAttribute("x2",px(km[st.idx]))}
+  const d=document.getElementById("mdot");if(d){d.setAttribute("cx",mx(st.idx));d.setAttribute("cy",my(st.idx))}
+  const s=Math.min(st.idx,N-2),arr=st.mode==="solo"?res.solo:res.grp,cum=st.mode==="solo"?res.cumSolo:res.cumGrp;
+  document.getElementById("rKm").textContent=km[st.idx].toFixed(1)+" km";
+  document.getElementById("rAlt").textContent=Math.round(alt[st.idx])+" m";
+  document.getElementById("rGr").textContent=(seg[s].g*100).toFixed(1)+"%";
+  document.getElementById("rV").textContent=(arr[s].v*3.6).toFixed(1)+" km/h";
+  document.getElementById("rW").textContent=Math.round(arr[s].w)+" W"+(arr[s].drop?" 被拉開":"");
+  document.getElementById("rT").textContent=fmt(cum[st.idx]);
+}
+const pe=document.getElementById("profile");
+function fromEvt(e){const r=prof.getBoundingClientRect();const k=(e.clientX-r.left)/r.width*MAXKM;let i=0;while(i<N-1&&km[i+1]<k)i++;setIdx(i)}
+pe.addEventListener("pointerdown",e=>{stopPlay();fromEvt(e);pe.setPointerCapture(e.pointerId)});
+pe.addEventListener("pointermove",e=>{if(e.buttons||e.pointerType==="mouse")fromEvt(e)});
+
+/* ---------- summary, zones, table ---------- */
+function zoneBadge(el,w,ftp){const z=zoneOf(w,ftp);el.textContent=z[0];el.style.background=css(z[3])}
+function render(){
+  compute();
+  const tS=res.cumSolo[N-1],tG=res.cumGrp[N-1],tL=sum(res.grp,x=>x.tL),wait=sum(res.waits,x=>x);
+  document.getElementById("tSolo").textContent=fmt(tS);
+  document.getElementById("sSolo").textContent=`我 ${st.wSolo} W・Avg ${(MAXKM/(tS/3600)).toFixed(1)} km/h`;
+  document.getElementById("tagSolo").textContent=zoneOf(st.wSolo,ME.ftp)[0];
+  document.getElementById("tGroup").textContent=fmt(tG);
+  const myAP=avgW(res.grp,0,res.grp.length);
+  document.getElementById("sGroup").textContent=`領騎 ${st.wLead} W・我的 AP ${Math.round(myAP)} W・坡頂等待共 ${fmt(wait)}`;
+  document.getElementById("tagGroup").textContent=`比獨推${tG<tS?"快":"慢"} ${fmt(Math.abs(tS-tG))}`;
+  ["Solo","Group"].forEach(m=>document.getElementById("m"+m).setAttribute("aria-pressed",String(st.mode===m.toLowerCase())));
+  document.getElementById("ctrlSolo").hidden=st.mode!=="solo";document.getElementById("ctrlGroup").hidden=st.mode==="solo";
+  document.getElementById("vSolo").textContent=st.wSolo;zoneBadge(document.getElementById("zSolo"),st.wSolo,ME.ftp);
+  document.getElementById("vLead").textContent=st.wLead;zoneBadge(document.getElementById("zLead"),st.wLead,LEAD.ftp);
+  document.getElementById("vCapS").textContent=st.wCap;document.getElementById("vDraftS").textContent=Math.round(st.draft*100);
+  // zones
+  const arr=st.mode==="solo"?res.solo:res.grp,tot=sum(arr,x=>x.t);const zt=ZONES.map(z=>sum(arr,x=>zoneOf(x.w,ME.ftp)===z?x.t:0));
+  document.getElementById("zbar").innerHTML=ZONES.map((z,i)=>zt[i]?`<span style="width:${zt[i]/tot*100}%;background:var(${z[3]})" title="${z[0]}"></span>`:"").join("");
+  document.getElementById("zlist").innerHTML=ZONES.map((z,i)=>`<div><span><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(${z[3]});margin-right:6px"></i>${z[0]}</span><span class="num">${fmt(zt[i])}</span></div>`).join("");
+  document.getElementById("zoneNote").textContent=st.mode==="solo"?"獨推：全程同一個 W":"跟車：依路段需要的 W 計算";
+  // climbs
+  document.getElementById("climbs").innerHTML=R.climbs.map(c=>{const ts=sum(res.solo,x=>x.t,c.i0,c.i1),tg=sum(res.grp,x=>x.t,c.i0,c.i1),w=avgW(res.grp,c.i0,c.i1),z=zoneOf(w,ME.ftp);
+    const wt=sum(res.waits,x=>x,c.i0,Math.min(res.waits.length,c.i1+4));
+    return `<tr data-i="${c.i0}"><td class="num">${c.id}</td><td>${c.name}</td><td class="num">${c.startKm.toFixed(1)}</td><td class="num">${c.distKm.toFixed(2)}</td><td class="num">${c.gain}</td><td class="num">${c.avg.toFixed(1)}%</td><td class="num">${c.max.toFixed(1)}%</td><td class="num">${fmt(ts)}</td><td class="num">${fmt(tg)}</td><td class="num">${Math.round(w)}</td><td><span class="zonebadge" style="background:var(${z[3]})">${z[0]}</span></td><td class="num">${wt>1?fmt(wt):"–"}</td></tr>`}).join("");
+  drawProfile();setIdx(st.idx);
+}
+document.getElementById("climbs").addEventListener("click",e=>{const tr=e.target.closest("tr");if(tr){stopPlay();setIdx(+tr.dataset.i);document.getElementById("profile").scrollIntoView({behavior:"smooth",block:"center"})}});
+
+/* chips */
+function chips(el,ftp,key,slider){
+  const defs=[["Z2",.66],["Tempo",.82],["SST",.91],["Threshold",1.0]];
+  el.innerHTML=defs.map(([n,r])=>`<button class="chip" data-w="${Math.round(ftp*r)}">${n} ${Math.round(ftp*r)}</button>`).join("");
+  el.addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;st[key]=+b.dataset.w;slider.value=st[key];mark();render()});
+  const mark=()=>el.querySelectorAll(".chip").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.w===st[key])));
+  slider.addEventListener("input",()=>{st[key]=+slider.value;mark();render()});mark();
+}
+const sS=document.getElementById("wSolo"),sL=document.getElementById("wLead");
+chips(document.getElementById("chipsSolo"),ME.ftp,"wSolo",sS);
+chips(document.getElementById("chipsLead"),LEAD.ftp,"wLead",sL);
+document.getElementById("wCap").addEventListener("input",e=>{st.wCap=+e.target.value;render()});
+document.getElementById("draft").addEventListener("input",e=>{st.draft=+e.target.value/100;render()});
+document.getElementById("mSolo").onclick=()=>{st.mode="solo";render()};
+document.getElementById("mGroup").onclick=()=>{st.mode="group";render()};
+
+/* play */
+let raf=null;const btn=document.getElementById("play");
+function stopPlay(){if(raf){cancelAnimationFrame(raf);raf=null;btn.textContent="▶ 播放"}}
+btn.onclick=()=>{if(raf){stopPlay();return}btn.textContent="■ 停止";const cum=st.mode==="solo"?res.cumSolo:res.cumGrp,T=cum[N-1],dur=20000;let t0=null;
+  const step=ts=>{if(t0===null)t0=ts;const target=Math.min(1,(ts-t0)/dur)*T;let i=0;while(i<N-1&&cum[i+1]<=target)i++;setIdx(i);if(ts-t0<dur)raf=requestAnimationFrame(step);else stopPlay()};
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches){setIdx(N-1);btn.textContent="▶ 播放";return}
+  raf=requestAnimationFrame(step)};
+
+/* pois */
+document.getElementById("pois").innerHTML=POI.map(p=>`<article class="poi"><div class="ph">照片待補</div><div class="body"><div class="meta"><span class="type">${p.type}</span><span class="num">${p.id}</span><span class="num">${p.i!==null?km[p.i].toFixed(1)+" km":"路線外"}</span></div><b>${p.name}</b><span class="muted" style="font-size:13px">${p.desc}</span><span class="nolink">連結待補</span></div></article>`).join("");
+
+/* facts */
+document.getElementById("fDist").textContent=MAXKM.toFixed(1)+" km";
+document.getElementById("fGain").textContent=Math.round(sum(seg,s=>Math.max(0,s.g*s.d)))+" m";
+drawMap();render();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",render);
+new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+</script>
+</body>
+</html>
